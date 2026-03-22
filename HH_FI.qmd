@@ -1,0 +1,1005 @@
+---
+title: "Financial Dependence and Healthcare Utilization among Older Adults"
+subtitle: "Evidence from the Longitudinal Ageing Study in India (LASI) Wave 1, 2017–18"
+author: "Research Analysis"
+date: today
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    toc-title: "Contents"
+    toc-location: left
+    number-sections: true
+    code-fold: true
+    code-summary: "Show Code"
+    code-tools: true
+    smooth-scroll: true
+    page-layout: full
+    fig-width: 10
+    fig-height: 7
+    fig-dpi: 150
+    lightbox: true
+    embed-resources: true
+  pdf:
+    documentclass: article
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    fig-width: 10
+    fig-height: 7
+    fig-pos: "H"
+    geometry:
+      - top=25mm
+      - bottom=25mm
+      - left=20mm
+      - right=20mm
+    fontsize: 11pt
+    colorlinks: true
+    keep-tex: true
+    pdf-engine: xelatex
+    include-in-header:
+      text: |
+        \usepackage{longtable}
+        \usepackage{booktabs}
+        \usepackage{array}
+        \usepackage{multirow}
+        \usepackage{colortbl}
+        \usepackage{xcolor}
+        \usepackage{float}
+        \usepackage{graphicx}
+        \usepackage{fancyhdr}
+        \usepackage{enumitem}
+        \usepackage{amsmath}
+        \usepackage{amssymb}
+        \usepackage{geometry}
+        \usepackage{setspace}
+        \usepackage{parskip}
+        \usepackage{hyperref}
+        \usepackage{lscape}
+execute:
+  warning: false
+  message: false
+  echo: false
+---
+
+```{r}
+#| label: latex-setup
+#| include: false
+```
+
+```{r}
+#| label: css-fix
+#| results: asis
+#| echo: false
+
+if (!knitr::is_latex_output()) {
+  cat('
+<style>
+table {
+  width: 100% !important;
+}
+</style>
+')
+}
+```
+
+```{r}
+#| label: setup
+#| include: false
+
+library(haven)
+library(dplyr)
+library(stargazer)
+library(kableExtra)
+library(knitr)
+
+options(knitr.table.format = "latex")
+options(kableExtra.latex.load_packages = FALSE)
+
+HH_FI <- read_dta("HH_FI.dta")
+
+HH_FI <- HH_FI |>
+  mutate(across(where(haven::is.labelled), as.numeric))
+
+HH_FI <- HH_FI |>
+  mutate(
+    gender_label    = factor(sex, levels = c(0, 1), labels = c("Female", "Male")),
+    zone_label      = factor(zone),
+    residence_label = factor(residence_type, levels = c(0, 1), labels = c("Urban", "Rural"))
+  )
+
+stargazer_output_type <- if (knitr::is_latex_output()) "latex" else "html"
+```
+
+```{r}
+#| label: variable-groups
+#| include: false
+
+dependent_variables <- c(
+  "healthcare",
+  "inpatient_hospitalization",
+  "total_facilities_visited",
+  "hospitalisation_count"
+)
+
+independent_variables <- c(
+  "financial_support",
+  "health_insurance_covered",
+  "pension_status"
+)
+
+continuous_control_variables <- c(
+  "age",
+  "sex",
+  "residence_type"
+)
+
+religion_labels <- c(
+  "1" = "Hindu", "2" = "Muslim", "3" = "Christian",
+  "4" = "Sikh", "5" = "Buddhist", "6" = "Jain",
+  "9" = "Other", "10" = "None"
+)
+
+caste_labels <- c(
+  "1" = "SC", "2" = "ST", "3" = "OBC", "4" = "General"
+)
+
+marital_labels <- c(
+  "1" = "Married", "2" = "Widowed", "3" = "Divorced",
+  "4" = "Separated", "5" = "Never married",
+  "6" = "Deserted", "7" = "Other"
+)
+
+category_label_map <- list(
+  religion           = religion_labels,
+  caste_social_group = caste_labels,
+  marital_status     = marital_labels
+)
+
+categorical_control_variables <- names(category_label_map)
+```
+
+```{r}
+#| label: table-functions
+#| include: false
+
+expand_categorical_rows <- function(variable_name, label_map, data) {
+  values      <- as.numeric(data[[variable_name]])
+  non_missing <- values[!is.na(values)]
+  all_vals    <- sort(unique(non_missing))
+
+  header_row <- data.frame(
+    Variable = variable_name,
+    N        = "",
+    Mean     = "",
+    SD       = "",
+    Min      = "",
+    Max      = "",
+    is_header = TRUE,
+    stringsAsFactors = FALSE
+  )
+
+  sub_rows <- lapply(seq_along(all_vals), function(i) {
+    val     <- all_vals[i]
+    label   <- ifelse(as.character(val) %in% names(label_map),
+                      label_map[as.character(val)], as.character(val))
+    dummy   <- as.numeric(non_missing == val)
+    n_obs   <- sum(non_missing == val, na.rm = TRUE)
+    data.frame(
+      Variable  = paste0("  ", i, ". ", label),
+      N         = as.character(n_obs),
+      Mean      = as.character(round(mean(dummy, na.rm = TRUE), 3)),
+      SD        = as.character(round(sd(dummy,   na.rm = TRUE), 3)),
+      Min       = as.character(round(min(dummy,  na.rm = TRUE), 3)),
+      Max       = as.character(round(max(dummy,  na.rm = TRUE), 3)),
+      is_header = FALSE,
+      stringsAsFactors = FALSE
+    )
+  })
+
+  do.call(rbind, c(list(header_row), sub_rows))
+}
+
+make_overall_control_table <- function(cont_vars, cat_vars,
+                                       label_map_list, table_title) {
+  cont_rows <- lapply(cont_vars, function(one_var) {
+    values      <- as.numeric(HH_FI[[one_var]])
+    non_missing <- values[!is.na(values)]
+    data.frame(
+      Variable  = one_var,
+      N         = as.character(length(non_missing)),
+      Mean      = as.character(round(mean(non_missing, na.rm = TRUE), 3)),
+      SD        = as.character(round(sd(non_missing,   na.rm = TRUE), 3)),
+      Min       = as.character(round(min(non_missing,  na.rm = TRUE), 3)),
+      Max       = as.character(round(max(non_missing,  na.rm = TRUE), 3)),
+      is_header = FALSE,
+      stringsAsFactors = FALSE
+    )
+  })
+
+  cat_rows <- lapply(cat_vars, function(one_var) {
+    expand_categorical_rows(one_var, label_map_list[[one_var]], HH_FI)
+  })
+
+  all_rows     <- do.call(rbind, c(cont_rows, cat_rows))
+  header_idx   <- which(all_rows$is_header)
+  display_table <- all_rows[, c("Variable","N","Mean","SD","Min","Max")]
+
+  tbl <- display_table |>
+    kableExtra::kbl(
+      caption   = table_title,
+      booktabs  = TRUE,
+      longtable = TRUE,
+      linesep   = "",
+      col.names = c("Variable", "N", "Mean", "SD", "Min", "Max")
+    ) |>
+    kableExtra::kable_styling(
+      latex_options = c("hold_position", "repeat_header", "striped", "scale_down"),
+      full_width    = TRUE,
+      font_size     = 9
+    ) |>
+    kableExtra::column_spec(1, bold = FALSE, width = "5cm")
+
+  for (i in header_idx) {
+    tbl <- tbl |>
+      kableExtra::row_spec(i, bold = TRUE, background = "#f0f0f0")
+  }
+
+  tbl
+}
+
+make_wide_subgroup_table <- function(variable_list, grouping_column, table_title) {
+  all_groups <- sort(unique(na.omit(HH_FI[[grouping_column]])))
+
+  all_rows <- lapply(variable_list, function(one_var) {
+    stats_across_groups <- lapply(all_groups, function(one_group) {
+      in_group    <- HH_FI[[grouping_column]] == one_group &
+                     !is.na(HH_FI[[grouping_column]])
+      values      <- as.numeric(HH_FI[[one_var]])[in_group]
+      non_missing <- values[!is.na(values)]
+      data.frame(
+        N    = length(non_missing),
+        Mean = as.character(round(mean(non_missing, na.rm = TRUE), 3)),
+        SD   = as.character(round(sd(non_missing,   na.rm = TRUE), 3)),
+        Min  = as.character(round(min(non_missing,  na.rm = TRUE), 3)),
+        Max  = as.character(round(max(non_missing,  na.rm = TRUE), 3)),
+        stringsAsFactors = FALSE
+      )
+    })
+    wide_row          <- do.call(cbind, stats_across_groups)
+    wide_row$Variable <- one_var
+    wide_row
+  })
+
+  result_table    <- do.call(rbind, all_rows)
+  group_col_names <- unlist(lapply(all_groups, function(g) {
+    c(paste0(g,"_N"), paste0(g,"_Mean"), paste0(g,"_SD"),
+      paste0(g,"_Min"), paste0(g,"_Max"))
+  }))
+  colnames(result_table) <- c(group_col_names, "Variable")
+  result_table           <- result_table[, c("Variable", group_col_names)]
+
+  header_above <- c(" " = 1)
+  for (g in all_groups) { header_above[as.character(g)] <- 5 }
+
+  result_table |>
+    kableExtra::kbl(
+      caption   = table_title,
+      booktabs  = TRUE,
+      longtable = TRUE,
+      linesep   = "",
+      col.names = c("Variable",
+                    rep(c("N", "Mean", "SD", "Min", "Max"), length(all_groups)))
+    ) |>
+    kableExtra::add_header_above(header_above) |>
+    kableExtra::kable_styling(
+      latex_options = c("hold_position", "repeat_header", "striped", "scale_down"),
+      full_width    = TRUE,
+      font_size     = 9
+    ) |>
+    kableExtra::column_spec(1, bold = TRUE, width = "4cm")
+}
+
+make_wide_categorical_subgroup_table <- function(cat_vars, label_map_list,
+                                                  grouping_column, table_title) {
+  all_groups <- sort(unique(na.omit(HH_FI[[grouping_column]])))
+
+  all_rows <- lapply(cat_vars, function(one_var) {
+    values   <- as.numeric(HH_FI[[one_var]])
+    all_vals <- sort(unique(values[!is.na(values)]))
+    label_map <- label_map_list[[one_var]]
+
+    # Parent header row — blank stats across all groups
+    n_stat_cols <- length(all_groups) * 5
+    header_vals <- as.list(rep("", n_stat_cols))
+    header_row  <- data.frame(
+      Variable  = one_var,
+      is_header = TRUE,
+      stringsAsFactors = FALSE
+    )
+    for (g in all_groups) {
+      header_row[[paste0(g,"_N")]]    <- ""
+      header_row[[paste0(g,"_Mean")]] <- ""
+      header_row[[paste0(g,"_SD")]]   <- ""
+      header_row[[paste0(g,"_Min")]]  <- ""
+      header_row[[paste0(g,"_Max")]]  <- ""
+    }
+
+    # Sub-rows: one per category
+    sub_rows <- lapply(seq_along(all_vals), function(i) {
+      val   <- all_vals[i]
+      label <- ifelse(as.character(val) %in% names(label_map),
+                      label_map[as.character(val)], as.character(val))
+      row <- data.frame(
+        Variable  = paste0("  ", i, ". ", label),
+        is_header = FALSE,
+        stringsAsFactors = FALSE
+      )
+      for (one_group in all_groups) {
+        in_group    <- HH_FI[[grouping_column]] == one_group &
+                       !is.na(HH_FI[[grouping_column]])
+        grp_values  <- as.numeric(HH_FI[[one_var]])[in_group]
+        non_missing <- grp_values[!is.na(grp_values)]
+        dummy       <- as.numeric(non_missing == val)
+        row[[paste0(one_group,"_N")]]    <- as.character(sum(non_missing == val, na.rm = TRUE))
+        row[[paste0(one_group,"_Mean")]] <- as.character(round(mean(dummy), 3))
+        row[[paste0(one_group,"_SD")]]   <- as.character(round(sd(dummy),   3))
+        row[[paste0(one_group,"_Min")]]  <- as.character(round(min(dummy),  3))
+        row[[paste0(one_group,"_Max")]]  <- as.character(round(max(dummy),  3))
+      }
+      row
+    })
+
+    do.call(rbind, c(list(header_row), sub_rows))
+  })
+
+  result_table <- do.call(rbind, all_rows)
+  header_idx   <- which(result_table$is_header)
+
+  group_col_names <- unlist(lapply(all_groups, function(g) {
+    c(paste0(g,"_N"), paste0(g,"_Mean"), paste0(g,"_SD"),
+      paste0(g,"_Min"), paste0(g,"_Max"))
+  }))
+
+  display_table <- result_table[, c("Variable", group_col_names)]
+
+  header_above <- c(" " = 1)
+  for (g in all_groups) { header_above[as.character(g)] <- 5 }
+
+  tbl <- display_table |>
+    kableExtra::kbl(
+      caption   = table_title,
+      booktabs  = TRUE,
+      longtable = TRUE,
+      linesep   = "",
+      col.names = c("Variable",
+                    rep(c("N", "Mean", "SD", "Min", "Max"), length(all_groups)))
+    ) |>
+    kableExtra::add_header_above(header_above) |>
+    kableExtra::kable_styling(
+      latex_options = c("hold_position", "repeat_header", "striped", "scale_down"),
+      full_width    = TRUE,
+      font_size     = 9
+    ) |>
+    kableExtra::column_spec(1, bold = FALSE, width = "4cm")
+
+  for (i in header_idx) {
+    tbl <- tbl |>
+      kableExtra::row_spec(i, bold = TRUE, background = "#f0f0f0")
+  }
+
+  tbl
+}
+```
+
+# Data and Variables
+
+## Data Source
+
+This study uses Wave 1 of the Longitudinal Ageing Study in India (LASI), conducted in 2017--18. LASI is a nationally representative longitudinal survey covering adults aged 45 and above across all Indian states and union territories. The analysis uses the individual-level dataset, restricting the sample to respondents aged 45 years and above.
+
+## Variable Description
+
+### Dependent Variables
+
+Four outcome variables are used. **Healthcare** is a binary indicator equal to 1 if the individual visited any healthcare facility in the past 12 months. **Inpatient hospitalization** is a binary indicator equal to 1 if the individual was admitted to a hospital. **Total facilities visited** is a count of distinct healthcare facilities visited. **Hospitalisation count** is the number of times the individual was hospitalized in the past 12 months.
+
+### Independent Variables
+
+Three key predictors capture financial protection. **Financial support** is a binary indicator equal to 1 if the individual receives financial support from family or others. **Health insurance coverage** is a binary indicator equal to 1 if the individual is covered by any health insurance scheme. **Pension status** is a binary indicator equal to 1 if the individual receives any pension income.
+
+### Control Variables
+
+The models control for **age** in years, **sex** (1 = Male, 0 = Female), and **residence type** (1 = Rural, 0 = Urban). **Religion**, **caste group**, and **marital status** are multi-category variables. Each category is treated as a binary dummy variable and reported separately with its own N, Mean, SD, Min, and Max.
+
+
+# Summary Statistics
+
+## Overall Summary Statistics
+
+### Dependent Variables
+
+```{r}
+#| label: overall-dependent
+#| results: asis
+
+stargazer(
+  as.data.frame(HH_FI[, dependent_variables]),
+  type         = stargazer_output_type,
+  title        = "Overall Summary Statistics — Dependent Variables",
+  digits       = 3,
+  summary.stat = c("n", "mean", "sd", "min", "max"),
+  header       = FALSE,
+  font.size    = "normalsize",
+  table.placement = "H",
+  label        = "tab:dep"
+)
+```
+
+
+### Independent Variables
+```{r}
+#| label: overall-independent
+#| results: asis
+
+stargazer(
+  as.data.frame(HH_FI[, independent_variables]),
+  type         = stargazer_output_type,
+  title        = "Overall Summary Statistics — Independent Variables",
+  digits       = 3,
+  summary.stat = c("n", "mean", "sd", "min", "max"),
+  header       = FALSE,
+  font.size    = "normalsize",
+  table.placement = "H",
+  label        = "tab:indep"
+)
+```
+
+
+### Control Variables
+
+```{r}
+#| label: overall-control
+make_overall_control_table(
+  cont_vars      = continuous_control_variables,
+  cat_vars       = categorical_control_variables,
+  label_map_list = category_label_map,
+  table_title    = "Overall Summary Statistics — Control Variables"
+)
+```
+
+
+## Subgroup Comparisons
+
+### By Gender
+
+#### Dependent Variables
+
+```{r}
+#| label: gender-dependent
+make_wide_subgroup_table(dependent_variables, "gender_label",
+                         "Dependent Variables — By Gender")
+```
+
+
+#### Independent Variables
+
+```{r}
+#| label: gender-independent
+make_wide_subgroup_table(independent_variables, "gender_label",
+                         "Independent Variables — By Gender")
+```
+
+
+#### Control Variables
+
+```{r}
+#| label: gender-control-continuous
+make_wide_subgroup_table(continuous_control_variables, "gender_label",
+                         "Control Variables — By Gender")
+```
+
+```{r}
+#| label: gender-control-categorical
+make_wide_categorical_subgroup_table(categorical_control_variables,
+                                     category_label_map, "gender_label",
+                                     "Categorical Control Variables — By Gender")
+```
+
+
+### By Zone
+
+#### Dependent Variables
+```{=latex}
+\begin{landscape}
+```
+```{r}
+#| label: zone-dependent
+make_wide_subgroup_table(dependent_variables, "zone_label",
+                         "Dependent Variables — By Zone")
+```
+```{=latex}
+\end{landscape}
+```
+
+#### Independent Variables
+```{=latex}
+\begin{landscape}
+```
+```{r}
+#| label: zone-independent
+make_wide_subgroup_table(independent_variables, "zone_label",
+                         "Independent Variables — By Zone")
+```
+```{=latex}
+\end{landscape}
+```
+
+#### Control Variables
+```{=latex}
+\begin{landscape}
+```
+```{r}
+#| label: zone-control-continuous
+make_wide_subgroup_table(continuous_control_variables, "zone_label",
+                         "Control Variables — By Zone")
+```
+```{=latex}
+\end{landscape}
+```
+
+```{=latex}
+\begin{landscape}
+```
+```{r}
+#| label: zone-control-categorical
+make_wide_categorical_subgroup_table(categorical_control_variables,
+                                     category_label_map, "zone_label",
+                                     "Categorical Control Variables — By Zone")
+```
+```{=latex}
+\end{landscape}
+```
+
+### By Residence Type
+
+#### Dependent Variables
+
+```{r}
+#| label: residence-dependent
+make_wide_subgroup_table(dependent_variables, "residence_label",
+                         "Dependent Variables — By Residence Type")
+```
+
+#### Independent Variables
+
+```{r}
+#| label: residence-independent
+make_wide_subgroup_table(independent_variables, "residence_label",
+                         "Independent Variables — By Residence Type")
+```
+
+#### Control Variables
+
+```{r}
+#| label: residence-control-continuous
+make_wide_subgroup_table(
+  continuous_control_variables[continuous_control_variables != "residence_type"],
+  "residence_label",
+  "Control Variables — By Residence Type"
+)
+```
+
+```{r}
+#| label: residence-control-categorical
+make_wide_categorical_subgroup_table(categorical_control_variables,
+                                     category_label_map, "residence_label",
+                                     "Categorical Control Variables — By Residence Type")
+```
+
+## Summary of Key Patterns
+
+::: {.callout-note collapse="true"}
+## Key Takeaways from Summary Statistics
+
+The descriptive statistics reveal three important patterns that directly motivate this study. First, healthcare utilization among older adults in India is low and predominantly outpatient — 67.2% visited any facility in the past 12 months but only 6.8% were hospitalized, and the average number of distinct facilities visited was less than one (mean = 0.884), indicating that serious healthcare engagement remains rare among this population. Second, formal financial protection is severely limited and unequally distributed — only 22.7% of older adults have health insurance, 8.8% receive pension income, and 13.1% receive family financial support, meaning the vast majority face healthcare costs without any formal protection mechanism. Third, these gaps are sharply gendered and regional — women have lower insurance coverage (21.6% vs 23.8% for men) and dramatically lower pension receipt (3.6% vs 11.4% for men), while informal family support partially compensates, with women receiving slightly more (15% vs 11%). Across geographic zones, the South has the highest insurance coverage (31% among insured) while the East has the lowest pension receipt (6%), and rural areas account for 64.9% of the sample with older adults there more dependent on informal support. Among social groups, SC and ST individuals show lower healthcare visit rates than OBC and General categories, and widowed individuals — who are disproportionately women at 34% vs 9% for men — face compounded vulnerability from both loss of spousal support and low pension access. Together these patterns raise the central question this study addresses: **does the limited financial protection available — insurance, pension, and family support — actually help older adults access healthcare when they need it, and does this differ by gender, region, and social group?**
+:::
+
+
+
+
+```{r}
+#| label: plot-setup
+#| include: false
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+pub_theme <- theme_minimal(base_size = 13) +
+  theme(
+    plot.title       = element_text(size = 15, face = "bold", hjust = 0.5,
+                                    margin = margin(b = 8)),
+    plot.subtitle    = element_text(size = 11, hjust = 0.5, color = "grey40",
+                                    margin = margin(b = 12)),
+    plot.caption     = element_text(size = 9, color = "grey50", hjust = 0,
+                                    margin = margin(t = 12)),
+    axis.title       = element_text(size = 12, face = "bold"),
+    axis.text        = element_text(size = 11),
+    legend.title     = element_text(size = 12, face = "bold"),
+    legend.text      = element_text(size = 11),
+    legend.position  = "bottom",
+    legend.key.size  = unit(0.9, "cm"),
+    strip.text       = element_text(size = 12, face = "bold"),
+    strip.background = element_rect(fill = "#f0f4f8", color = "grey75"),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    panel.spacing    = unit(1.8, "lines"),
+    plot.margin      = margin(20, 20, 20, 20)
+  )
+
+theme_set(pub_theme)
+
+gender_colors    <- c("Female" = "#e05c5c", "Male" = "#3a7abf")
+insurance_colors <- c("No Insurance" = "#e05c5c", "Insured" = "#3a7abf")
+pension_colors   <- c("No Pension"   = "#e09a3a", "Pension" = "#3a7abf")
+zone_colors      <- c("Central" = "#3a7abf", "East" = "#4aab5e",
+                      "North"   = "#e05c5c", "South" = "#9b59b6", "West" = "#e09a3a")
+```
+
+# Descriptive Evidence
+
+---
+
+### Figure 1: Healthcare Utilization, Insurance, and Pension by Gender
+
+```{r}
+#| label: fig1-descriptive-gender
+#| fig-cap: "Figure 1. Healthcare Utilization, Insurance Coverage, and Pension Receipt by Gender. Documenting the gender gap in both utilization and financial protection."
+#| fig-width: 13
+#| fig-height: 7
+
+HH_FI |>
+  filter(!is.na(sex)) |>
+  mutate(Gender = factor(sex, 0:1, c("Female", "Male"))) |>
+  group_by(Gender) |>
+  summarise(
+    `Any Healthcare\nVisit`      = mean(healthcare,               na.rm=TRUE)*100,
+    `Inpatient\nHospitalization` = mean(inpatient_hospitalization, na.rm=TRUE)*100,
+    `Health Insurance\nCoverage` = mean(health_insurance_covered,  na.rm=TRUE)*100,
+    `Pension\nReceipt`           = mean(pension_status,            na.rm=TRUE)*100,
+    `Financial\nSupport`         = mean(financial_support,         na.rm=TRUE)*100,
+    .groups = "drop"
+  ) |>
+  pivot_longer(cols = -Gender, names_to = "Measure", values_to = "Value") |>
+  mutate(
+    Category = case_when(
+      Measure %in% c("Any Healthcare\nVisit", "Inpatient\nHospitalization") ~
+        "Healthcare Utilization",
+      TRUE ~ "Financial Protection"
+    ),
+    Category = factor(Category,
+                      levels = c("Healthcare Utilization", "Financial Protection")),
+    Measure  = factor(Measure, levels = c(
+      "Any Healthcare\nVisit", "Inpatient\nHospitalization",
+      "Health Insurance\nCoverage", "Pension\nReceipt", "Financial\nSupport"
+    ))
+  ) |>
+  ggplot(aes(x = Measure, y = Value, fill = Gender)) +
+  geom_col(position = position_dodge(width = 0.65), width = 0.55,
+           color = "white", linewidth = 0.4) +
+  geom_text(aes(label = paste0(round(Value,1), "%")),
+            position = position_dodge(width = 0.65),
+            vjust = -0.5, size = 3.8, fontface = "bold") +
+  facet_wrap(~ Category, scales = "free_x", nrow = 1) +
+  scale_fill_manual(values = gender_colors) +
+  scale_y_continuous(limits = c(0, 90),
+                     labels = function(x) paste0(x, "%"),
+                     expand = expansion(mult = c(0, 0.08))) +
+  labs(
+    title    = "Healthcare Utilization and Financial Protection by Gender",
+    subtitle = "Adults aged 45+ | LASI Wave 1, 2017–18",
+    x        = NULL, y = "Rate (%)", fill = "Gender",
+    caption  = "Source: LASI Wave 1, 2017–18."
+  )
+```
+
+::: {.callout-note collapse="true"}
+## Interpretation — Figure 1
+
+- About **70% of older women** and **64% of older men** visited any healthcare facility in the past 12 months.
+- But only **6.5% of women** and **7.1% of men** were actually admitted to hospital — meaning most visits were outpatient, not serious enough for hospitalization.
+- Women visit healthcare more than men overall, but men get hospitalized slightly more — suggesting women seek routine care more while men have more serious illness episodes.
+- For financial protection: only **21.6% of women** have health insurance vs **23.8% of men** — women are less covered.
+- Pension is even more unequal — only **3.6% of women** receive pension vs **11.4% of men** — a very large gender gap.
+- **Financial support from family** is received by 15% of women and 11% of men — interestingly women receive more family financial support than men, which is the opposite of the insurance and pension pattern. This suggests that where formal protection (insurance, pension) is lower for women, informal family support partially compensates.
+- This figure sets the **baseline** — it tells us who uses healthcare and who has financial protection before we look at any relationships.
+:::
+
+---
+
+### Figure 2: Healthcare Utilization and Financial Protection Across Regions
+
+```{r}
+#| label: fig2-descriptive-zone
+#| fig-cap: "Figure 2. Healthcare Utilization, Insurance Coverage, and Pension Receipt across Geographic Zones.Documenting regional variation in both utilization and financial protection."
+#| fig-width: 14
+#| fig-height: 9
+
+HH_FI |>
+  filter(!is.na(zone), !is.na(sex)) |>
+  mutate(Gender = factor(sex, 0:1, c("Female", "Male"))) |>
+  group_by(zone, Gender) |>
+  summarise(
+    `Any Healthcare Visit (%)`      = mean(healthcare,               na.rm=TRUE)*100,
+    `Inpatient Hospitalization (%)`  = mean(inpatient_hospitalization, na.rm=TRUE)*100,
+    `Health Insurance Coverage (%)`  = mean(health_insurance_covered,  na.rm=TRUE)*100,
+    `Pension Receipt (%)`            = mean(pension_status,            na.rm=TRUE)*100,
+    .groups = "drop"
+  ) |>
+  pivot_longer(cols = -c(zone, Gender), names_to = "Measure", values_to = "Value") |>
+  mutate(Measure = factor(Measure, levels = c(
+    "Any Healthcare Visit (%)", "Inpatient Hospitalization (%)",
+    "Health Insurance Coverage (%)", "Pension Receipt (%)"
+  ))) |>
+  ggplot(aes(x = zone, y = Value, fill = Gender)) +
+  geom_col(position = position_dodge(width = 0.65), width = 0.55,
+           color = "white", linewidth = 0.4) +
+  geom_text(aes(label = paste0(round(Value,1), "%")),
+            position = position_dodge(width = 0.65),
+            vjust = -0.5, size = 3.2, fontface = "bold") +
+  facet_wrap(~ Measure, ncol = 2, scales = "free_y") +
+  scale_fill_manual(values = gender_colors) +
+  scale_y_continuous(labels = function(x) paste0(x, "%"),
+                     expand = expansion(mult = c(0, 0.12))) +
+  labs(
+    title    = "Healthcare Utilization and Financial Protection Across Regions",
+    subtitle = "Adults aged 45+ | LASI Wave 1, 2017–18",
+    x        = "Geographic Zone", y = "Rate (%)", fill = "Gender",
+    caption  = "Source: LASI Wave 1, 2017–18."
+  )
+```
+
+::: {.callout-note collapse="true"}
+## Interpretation — Figure 2
+
+- Building on Figure 1, this figure breaks the same measures down by **geographic zone**.
+- **North zone** has the highest healthcare visit rate — older adults in North India seek care more than other regions.
+- **South zone** has the highest insurance coverage — older adults in the South are much better protected financially.
+- **Pension receipt** is highest in North and lowest in East — showing large regional inequality in pension access.
+- The **gender gap seen in Figure 1 continues across all zones** — women consistently have lower insurance and pension coverage than men in every region.
+- This figure claim about **variation across major regions of India**.
+:::
+
+---
+
+## Association Between Financial Protection and Healthcare Outcomes
+
+### Figure 3: Insurance Coverage and Healthcare Outcomes
+
+```{r}
+#| label: fig3-insurance-outcomes
+#| fig-cap: "Figure 3. Association Between Health Insurance Coverage and Healthcare Outcomes by Gender."
+#| fig-width: 13
+#| fig-height: 7
+
+HH_FI |>
+  filter(!is.na(health_insurance_covered), !is.na(sex)) |>
+  mutate(
+    Gender    = factor(sex, 0:1, c("Female", "Male")),
+    Insurance = factor(health_insurance_covered, 0:1, c("No Insurance", "Insured"))
+  ) |>
+  group_by(Gender, Insurance) |>
+  summarise(
+    `Inpatient\nHospitalization (%)`              = mean(inpatient_hospitalization, na.rm=TRUE)*100,
+    `Mean Facilities\nVisited (Count)`            = mean(total_facilities_visited,  na.rm=TRUE),
+    `Mean Hospitalisations\n(Among Hospitalized)` = round(mean(
+      hospitalisation_count[inpatient_hospitalization == 1], na.rm=TRUE), 1),
+    .groups = "drop"
+  ) |>
+  pivot_longer(
+    cols     = -c(Gender, Insurance),
+    names_to = "Outcome", values_to = "Value"
+  ) |>
+  mutate(
+    Outcome = factor(Outcome, levels = c(
+      "Inpatient\nHospitalization (%)",
+      "Mean Facilities\nVisited (Count)",
+      "Mean Hospitalisations\n(Among Hospitalized)"
+    ))
+  ) |>
+  ggplot(aes(x = Gender, y = Value, fill = Insurance)) +
+  geom_col(position = position_dodge(width = 0.65), width = 0.55,
+           color = "white", linewidth = 0.4) +
+  geom_text(aes(label = round(Value, 1)),
+            position = position_dodge(width = 0.65),
+            vjust = -0.5, size = 3.8, fontface = "bold") +
+  facet_wrap(~ Outcome, nrow = 1, scales = "free_y") +
+  scale_fill_manual(values = insurance_colors) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  labs(
+    title    = "Association Between Insurance Coverage and Healthcare Outcomes by Gender",
+    subtitle = "Adults aged 45+ | LASI Wave 1, 2017–18",
+    x        = NULL,
+    y        = "Rate (%) / Mean Count",
+    fill     = "Insurance Status",
+    caption  = "Note: Hospitalisation Count calculated among hospitalized individuals only. Source: LASI Wave 1, 2017–18."
+  )
+```
+
+::: {.callout-note collapse="true"}
+## Interpretation — Figure 3
+
+- This figure takes the **6–7% hospitalization rate from Figure 1** and splits it by insurance status.
+- **Insured individuals have higher hospitalization rates** than uninsured — for both men and women.
+- This seems something inntresting — why do insured people get hospitalized more? Because **uninsured people who need hospital care simply cannot afford to go** — they avoid hospitalization due to **cost** even when they need it.
+- So insurance does not cause illness — it **enables access** to hospital care that people would otherwise skip.
+- **Mean facilities visited** is also higher for insured — insured people visit more types of facilities overall.
+- **Mean hospitalizations among those hospitalized** is slightly higher for insured — insured people can afford repeat visits when needed.
+- This figure directly shows— **insurance coverage shapes healthcare behavior** among older adults in India.
+:::
+
+---
+
+### Figure 4: Pension Receipt and Healthcare Outcomes by Residence and Age
+
+```{r}
+#| label: fig4-pension-outcomes
+#| fig-cap: "Figure 4. Association Between Pension Receipt and Inpatient Hospitalization by Age Group and Residence. Line plots show how pension effect on hospitalization varies across age groups in urban vs rural areas."
+#| fig-width: 13
+#| fig-height: 7
+
+HH_FI |>
+  filter(!is.na(age), !is.na(residence_type), !is.na(pension_status),
+         !is.na(inpatient_hospitalization)) |>
+  mutate(
+    Age_Group = cut(age, c(44,54,64,74,100),
+                    labels = c("45–54","55–64","65–74","75+")),
+    Residence = factor(residence_type, 0:1, c("Urban","Rural")),
+    Pension   = factor(pension_status, 0:1, c("No Pension","Pension"))
+  ) |>
+  filter(!is.na(Age_Group)) |>
+  group_by(Age_Group, Residence, Pension) |>
+  summarise(Hosp = mean(inpatient_hospitalization, na.rm=TRUE)*100,
+            .groups="drop") |>
+  ggplot(aes(x = Age_Group, y = Hosp, color = Pension,
+             group = Pension, shape = Pension)) +
+  geom_line(linewidth = 1.5) +
+  geom_point(size = 5) +
+  geom_text(aes(label = paste0(round(Hosp,1), "%")),
+            vjust = -0.9, size = 3.5, fontface = "bold", show.legend = FALSE) +
+  facet_wrap(~ Residence, nrow = 1) +
+  scale_color_manual(values = pension_colors) +
+  scale_shape_manual(values = c("No Pension" = 16, "Pension" = 17)) +
+  scale_y_continuous(limits = c(0, 18),
+                     labels = function(x) paste0(x, "%")) +
+  labs(
+    title    = "Pension Receipt and Inpatient Hospitalization by Age Group and Residence",
+    subtitle = "Adults aged 45+ | LASI Wave 1, 2017–18",
+    x        = "Age Group", y = "% Hospitalized",
+    color    = "Pension Status", shape = "Pension Status",
+    caption  = "Source: LASI Wave 1, 2017–18."
+  )
+```
+
+::: {.callout-note collapse="true"}
+## Interpretation — Figure 4
+
+- This figure asks — **does having pension income help older adults access hospital care as they age?**
+- The answer is clearly **yes** — in both urban and rural areas, pension recipients have higher hospitalization rates than those without pension at every age group.
+- In **urban areas** the pension gap is largest at age 45–54 — young urban pensioners (likely formal sector retirees) access hospital care much more than non-pensioned.
+- In **rural areas** the pension effect grows with age — by age 75+ rural pensioners are hospitalized almost **twice as often** as rural non-pensioners.
+- Connecting back to Figure 1 — recall only **3.6% of women** and **11.4% of men** have pension. Given Figure 4 shows pension strongly increases hospitalization, this means the majority of older adults, especially women, are **missing out on this benefit**.
+- This figure proves- **pension income shaping healthcare behavior** among older adults.
+:::
+
+---
+
+## Differences among people based on their social, economic, and demographic backgrounds.
+
+
+### Figure 5: Social Protection and Healthcare Access Across Caste Groups
+
+```{r}
+#| label: fig5-caste-insurance
+#| fig-cap: "Figure 5. Any Healthcare Visit by Caste Group, Insurance Status, and Gender. Documents whether insurance reduces inequality in healthcare access across caste groups and genders."
+#| fig-width: 13
+#| fig-height: 7
+
+HH_FI |>
+  filter(!is.na(caste_social_group), !is.na(sex),
+         !is.na(health_insurance_covered), !is.na(healthcare)) |>
+  mutate(
+    Caste     = factor(caste_social_group, 1:4, c("SC","ST","OBC","General")),
+    Gender    = factor(sex, 0:1, c("Female","Male")),
+    Insurance = factor(health_insurance_covered, 0:1, c("No Insurance","Insured"))
+  ) |>
+  group_by(Caste, Gender, Insurance) |>
+  summarise(Visit = mean(healthcare, na.rm=TRUE)*100, .groups="drop") |>
+  ggplot(aes(x = Caste, y = Visit, fill = Gender)) +
+  geom_col(position = position_dodge(width = 0.65), width = 0.55,
+           color = "white", linewidth = 0.4) +
+  geom_text(aes(label = paste0(round(Visit,1), "%")),
+            position = position_dodge(width = 0.65),
+            vjust = -0.5, size = 3.5, fontface = "bold") +
+  facet_wrap(~ Insurance, nrow = 1) +
+  scale_fill_manual(values = gender_colors) +
+  scale_y_continuous(limits = c(0, 105),
+                     labels = function(x) paste0(x, "%"),
+                     expand = expansion(mult = c(0, 0.05))) +
+  labs(
+    title    = "Social Protection and Healthcare Access Across Caste Groups",
+    subtitle = "Caste × Gender × Insurance | Adults aged 45+ | LASI Wave 1, 2017–18",
+    x        = "Caste Group", y = "% Visited Any Healthcare Facility", fill = "Gender",
+    caption  = "Source: LASI Wave 1, 2017–18."
+  )
+```
+
+::: {.callout-note collapse="true"}
+## Interpretation — Figure 5
+
+- This figure adds a new dimension — **does insurance reduce inequality across caste groups?**
+- **Without insurance**: SC and ST groups have lower healthcare visit rates than OBC and General — a clear caste-based inequality in access.
+- **With insurance**: the gap narrows — SC and ST groups with insurance visit healthcare at rates much closer to the General category.
+- The **gender gap also narrows with insurance** — insured women visit almost as much as insured men across all caste groups.
+- This is a key finding — **insurance does not just increase overall utilization, it specifically helps disadvantaged groups** (SC, ST, women) close the access gap.
+- This connects-  controlling for **socioeconomic characteristics** — caste is one of the most important of these in the Indian context.
+:::
+
+---
+
+### Figure 6: How Age Shapes the Insurance Effect on Healthcare Utilization
+
+```{r}
+#| label: fig6-age-insurance
+#| fig-cap: "Figure 6. Inpatient Hospitalization by Age Group, Insurance Status, and Gender. It shows whether the insurance effect on hospitalization grows with age and differs by gender."
+#| fig-width: 13
+#| fig-height: 7
+
+HH_FI |>
+  filter(!is.na(age), !is.na(sex), !is.na(health_insurance_covered),
+         !is.na(inpatient_hospitalization)) |>
+  mutate(
+    Age_Group = cut(age, c(44,54,64,74,100),
+                    labels = c("45–54","55–64","65–74","75+")),
+    Gender    = factor(sex, 0:1, c("Female","Male")),
+    Insurance = factor(health_insurance_covered, 0:1, c("No Insurance","Insured"))
+  ) |>
+  filter(!is.na(Age_Group)) |>
+  group_by(Age_Group, Gender, Insurance) |>
+  summarise(Hosp = mean(inpatient_hospitalization, na.rm=TRUE)*100,
+            .groups="drop") |>
+  ggplot(aes(x = Age_Group, y = Hosp, color = Insurance,
+             group = Insurance, shape = Insurance)) +
+  geom_line(linewidth = 1.5) +
+  geom_point(size = 5) +
+  geom_text(aes(label = paste0(round(Hosp,1), "%")),
+            vjust = -0.9, size = 3.5, fontface = "bold", show.legend = FALSE) +
+  facet_wrap(~ Gender, nrow = 1) +
+  scale_color_manual(values = insurance_colors) +
+  scale_shape_manual(values = c("No Insurance" = 16, "Insured" = 17)) +
+  scale_y_continuous(limits = c(0, 18),
+                     labels = function(x) paste0(x, "%")) +
+  labs(
+    title    = "How Age Shapes the Insurance Effect on Inpatient Hospitalization",
+    x        = "Age Group",
+    y        = "% Hospitalized",
+    color    = "Insurance Status",
+    shape    = "Insurance Status",
+    caption  = "Source: LASI Wave 1, 2017–18."
+  )
+```
+
+::: {.callout-note collapse="true"}
+## Interpretation — Figure 6
+
+- This figure builds on Figure 3 — Figure 3 showed insurance increases hospitalization overall, Figure 6 now asks: **does this effect grow with age?**
+- **Yes** — the gap between insured and uninsured hospitalization rates grows larger as age increases.
+- At age **45–54** the gap between insured and uninsured is small — younger older adults manage without insurance.
+- By age **75+** the gap is much larger — the oldest adults benefit most from insurance coverage.
+- This pattern holds for both men and women but is slightly stronger for **women** — older insured women at 75+ have much higher hospitalization rates than uninsured women of the same age.
+- This is the most **policy-relevant finding** — it shows that insurance matters most for the very old, who are also the most vulnerable and have the highest healthcare needs.
+- Combined with Figure 1 which showed pension and insurance coverage is already low, this means the people who need protection most — **oldest adults and women** — are the least likely to have it.
+:::
+

@@ -115,6 +115,8 @@ stargazer_output_type <- if (knitr::is_latex_output()) "latex" else "html"
 ```
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: variable-groups
 #| include: false
 
@@ -423,6 +425,8 @@ The models control for **age** in years, **sex** (1 = Male, 0 = Female), and **r
 ### Dependent Variables
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: overall-dependent
 #| results: asis
 
@@ -442,6 +446,8 @@ stargazer(
 
 ### Independent Variables
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: overall-independent
 #| results: asis
 
@@ -462,6 +468,8 @@ stargazer(
 ### Control Variables
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: overall-control
 make_overall_control_table(
   cont_vars      = continuous_control_variables,
@@ -479,6 +487,8 @@ make_overall_control_table(
 #### Dependent Variables
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: gender-dependent
 make_wide_subgroup_table(dependent_variables[1:2], "gender_label",
                          "Dependent Variables — By Gender")
@@ -488,6 +498,8 @@ make_wide_subgroup_table(dependent_variables[1:2], "gender_label",
 #### Independent Variables
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: gender-independent
 make_wide_subgroup_table(independent_variables, "gender_label",
                          "Independent Variables — By Gender")
@@ -497,12 +509,16 @@ make_wide_subgroup_table(independent_variables, "gender_label",
 #### Control Variables
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: gender-control-continuous
 make_wide_subgroup_table(continuous_control_variables, "gender_label",
                          "Control Variables — By Gender")
 ```
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: gender-control-categorical
 make_wide_categorical_subgroup_table(categorical_control_variables,
                                      category_label_map, "gender_label",
@@ -517,6 +533,8 @@ make_wide_categorical_subgroup_table(categorical_control_variables,
 \begin{landscape}
 ```
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: zone-dependent
 make_wide_subgroup_table(dependent_variables[1:2], "zone_label",
                          "Dependent Variables — By Zone")
@@ -530,6 +548,8 @@ make_wide_subgroup_table(dependent_variables[1:2], "zone_label",
 \begin{landscape}
 ```
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: zone-independent
 make_wide_subgroup_table(independent_variables, "zone_label",
                          "Independent Variables — By Zone")
@@ -543,6 +563,8 @@ make_wide_subgroup_table(independent_variables, "zone_label",
 \begin{landscape}
 ```
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: zone-control-continuous
 make_wide_subgroup_table(continuous_control_variables, "zone_label",
                          "Control Variables — By Zone")
@@ -555,6 +577,8 @@ make_wide_subgroup_table(continuous_control_variables, "zone_label",
 \begin{landscape}
 ```
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: zone-control-categorical
 make_wide_categorical_subgroup_table(categorical_control_variables,
                                      category_label_map, "zone_label",
@@ -569,6 +593,8 @@ make_wide_categorical_subgroup_table(categorical_control_variables,
 #### Dependent Variables
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: residence-dependent
 make_wide_subgroup_table(dependent_variables[1:2], "residence_label",
                          "Dependent Variables — By Residence Type")
@@ -577,6 +603,8 @@ make_wide_subgroup_table(dependent_variables[1:2], "residence_label",
 #### Independent Variables
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: residence-independent
 make_wide_subgroup_table(independent_variables, "residence_label",
                          "Independent Variables — By Residence Type")
@@ -585,6 +613,8 @@ make_wide_subgroup_table(independent_variables, "residence_label",
 #### Control Variables
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: residence-control-continuous
 make_wide_subgroup_table(
   continuous_control_variables[continuous_control_variables != "residence_type"],
@@ -594,6 +624,8 @@ make_wide_subgroup_table(
 ```
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: residence-control-categorical
 make_wide_categorical_subgroup_table(categorical_control_variables,
                                      category_label_map, "residence_label",
@@ -657,6 +689,8 @@ zone_colors      <- c("Central" = "#3a7abf", "East" = "#4aab5e",
 ### Figure 1: Healthcare Utilization, Insurance, and Pension by Gender
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: fig1-descriptive-gender
 #| fig-cap: "Figure 1. Healthcare Utilization, Insurance Coverage, and Pension Receipt by Gender. Documenting the gender gap in both utilization and financial protection."
 #| fig-width: 13
@@ -724,6 +758,8 @@ HH_FI |>
 ### Figure 2: Healthcare Utilization and Financial Protection Across Regions
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: fig2-descriptive-zone
 #| fig-cap: "Figure 2. Healthcare Utilization, Insurance Coverage, and Pension Receipt across Geographic Zones.Documenting regional variation in both utilization and financial protection."
 #| fig-width: 14
@@ -779,6 +815,8 @@ HH_FI |>
 ### Figure 3: How Age Shapes the Insurance Effect on Healthcare Utilization
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: fig3-age-insurance
 #| fig-cap: "Figure 3. Inpatient Hospitalization by Age Group, Insurance Status, and Gender. It shows whether the insurance effect on hospitalization grows with age and differs by gender."
 #| fig-width: 13
@@ -834,6 +872,8 @@ HH_FI |>
 ### Figure 4: Pension Receipt and Healthcare Outcomes by Residence and Age
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: fig4-pension-outcomes
 #| fig-cap: "Figure 4. Association Between Pension Receipt and Inpatient Hospitalization by Age Group and Residence. Line plots show how pension effect on hospitalization varies across age groups in urban vs rural areas."
 #| fig-width: 13
@@ -888,6 +928,8 @@ HH_FI |>
 ### Figure 5: Social Protection and Healthcare Access Across Caste Groups
 
 ```{r}
+#| echo: true
+#| code-fold: true
 #| label: fig5-caste-insurance
 #| fig-cap: "Figure 5. Any Healthcare Visit by Caste Group, Insurance Status, and Gender. Documents whether insurance reduces inequality in healthcare access across caste groups and genders."
 #| fig-width: 13
@@ -965,8 +1007,9 @@ stargazer_output_type <- if (knitr::is_latex_output()) "latex" else "html"
 ```
 
 
-```{r regressions, include=FALSE}
-
+```{r regressions, include=T}
+#| echo: true
+#| code-fold: true
 hc1 <- lm(healthcare ~ health_insurance_covered + pension_status + financial_support +
             factor(state_id), data = HH_FI)
 
@@ -989,6 +1032,8 @@ ip2 <- lm(inpatient_hospitalization ~ health_insurance_covered + pension_status 
 
 
 ```{r, results='asis'}
+#| echo: true
+#| code-fold: true
 stargazer(hc1, hc2, ip1, ip2,
           type = "html",
           keep = c("health_insurance_covered", "pension_status", "financial_support"),

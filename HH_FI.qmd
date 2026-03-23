@@ -64,7 +64,11 @@ execute:
   warning: false
   message: false
   echo: false
+editor: 
+  markdown: 
+    wrap: sentence
 ---
+
 ```{r}
 #| label: latex-setup
 #| include: false
@@ -401,22 +405,32 @@ make_wide_categorical_subgroup_table <- function(cat_vars, label_map_list,
 
 ## Data Source
 
-This study uses Wave 1 of the Longitudinal Ageing Study in India (LASI), conducted in 2017--18. LASI is a nationally representative longitudinal survey covering adults aged 45 and above across all Indian states and union territories. The analysis uses the individual-level dataset, restricting the sample to respondents aged 45 years and above.
+This study uses Wave 1 of the Longitudinal Ageing Study in India (LASI), conducted in 2017--18.
+LASI is a nationally representative longitudinal survey covering adults aged 45 and above across all Indian states and union territories.
+The analysis uses the individual-level dataset, restricting the sample to respondents aged 45 years and above.
 
 ## Variable Description
 
 ### Dependent Variables
 
-Four outcome variables are used. **Healthcare** is a binary indicator equal to 1 if the individual visited any healthcare facility in the past 12 months. **Inpatient hospitalization** is a binary indicator equal to 1 if the individual was admitted to a hospital. **Total facilities visited** is a count of distinct healthcare facilities visited. **Hospitalisation count** is the number of times the individual was hospitalized in the past 12 months.
+Four outcome variables are used.
+**Healthcare** is a binary indicator equal to 1 if the individual visited any healthcare facility in the past 12 months.
+**Inpatient hospitalization** is a binary indicator equal to 1 if the individual was admitted to a hospital.
+**Total facilities visited** is a count of distinct healthcare facilities visited.
+**Hospitalisation count** is the number of times the individual was hospitalized in the past 12 months.
 
 ### Independent Variables
 
-Three key predictors capture financial protection. **Financial support** is a binary indicator equal to 1 if the individual receives financial support from family or others. **Health insurance coverage** is a binary indicator equal to 1 if the individual is covered by any health insurance scheme. **Pension status** is a binary indicator equal to 1 if the individual receives any pension income.
+Three key predictors capture financial protection.
+**Financial support** is a binary indicator equal to 1 if the individual receives financial support from family or others.
+**Health insurance coverage** is a binary indicator equal to 1 if the individual is covered by any health insurance scheme.
+**Pension status** is a binary indicator equal to 1 if the individual receives any pension income.
 
 ### Control Variables
 
-The models control for **age** in years, **sex** (1 = Male, 0 = Female), and **residence type** (1 = Rural, 0 = Urban). **Religion**, **caste group**, and **marital status** are multi-category variables. Each category is treated as a binary dummy variable and reported separately with its own N, Mean, SD, Min, and Max.
-
+The models control for **age** in years, **sex** (1 = Male, 0 = Female), and **residence type** (1 = Rural, 0 = Urban).
+**Religion**, **caste group**, and **marital status** are multi-category variables.
+Each category is treated as a binary dummy variable and reported separately with its own N, Mean, SD, Min, and Max.
 
 # Summary Statistics
 
@@ -443,8 +457,8 @@ stargazer(
 )
 ```
 
-
 ### Independent Variables
+
 ```{r}
 #| echo: true
 #| code-fold: true
@@ -464,7 +478,6 @@ stargazer(
 )
 ```
 
-
 ### Control Variables
 
 ```{r}
@@ -478,7 +491,6 @@ make_overall_control_table(
   table_title    = "Overall Summary Statistics — Control Variables"
 )
 ```
-
 
 ## Subgroup Comparisons
 
@@ -494,7 +506,6 @@ make_wide_subgroup_table(dependent_variables[1:2], "gender_label",
                          "Dependent Variables — By Gender")
 ```
 
-
 #### Independent Variables
 
 ```{r}
@@ -504,7 +515,6 @@ make_wide_subgroup_table(dependent_variables[1:2], "gender_label",
 make_wide_subgroup_table(independent_variables, "gender_label",
                          "Independent Variables — By Gender")
 ```
-
 
 #### Control Variables
 
@@ -525,13 +535,14 @@ make_wide_categorical_subgroup_table(categorical_control_variables,
                                      "Categorical Control Variables — By Gender")
 ```
 
-
 ### By Zone
 
 #### Dependent Variables
+
 ```{=latex}
 \begin{landscape}
 ```
+
 ```{r}
 #| echo: true
 #| code-fold: true
@@ -539,14 +550,17 @@ make_wide_categorical_subgroup_table(categorical_control_variables,
 make_wide_subgroup_table(dependent_variables[1:2], "zone_label",
                          "Dependent Variables — By Zone")
 ```
+
 ```{=latex}
 \end{landscape}
 ```
 
 #### Independent Variables
+
 ```{=latex}
 \begin{landscape}
 ```
+
 ```{r}
 #| echo: true
 #| code-fold: true
@@ -554,14 +568,17 @@ make_wide_subgroup_table(dependent_variables[1:2], "zone_label",
 make_wide_subgroup_table(independent_variables, "zone_label",
                          "Independent Variables — By Zone")
 ```
+
 ```{=latex}
 \end{landscape}
 ```
 
 #### Control Variables
+
 ```{=latex}
 \begin{landscape}
 ```
+
 ```{r}
 #| echo: true
 #| code-fold: true
@@ -569,6 +586,7 @@ make_wide_subgroup_table(independent_variables, "zone_label",
 make_wide_subgroup_table(continuous_control_variables, "zone_label",
                          "Control Variables — By Zone")
 ```
+
 ```{=latex}
 \end{landscape}
 ```
@@ -576,6 +594,7 @@ make_wide_subgroup_table(continuous_control_variables, "zone_label",
 ```{=latex}
 \begin{landscape}
 ```
+
 ```{r}
 #| echo: true
 #| code-fold: true
@@ -584,6 +603,7 @@ make_wide_categorical_subgroup_table(categorical_control_variables,
                                      category_label_map, "zone_label",
                                      "Categorical Control Variables — By Zone")
 ```
+
 ```{=latex}
 \end{landscape}
 ```
@@ -636,12 +656,7 @@ make_wide_categorical_subgroup_table(categorical_control_variables,
 
 ::: {.callout-note collapse="true"}
 ## Key Takeaways from Summary Statistics
-
-
 :::
-
-
-
 
 ```{r}
 #| label: plot-setup
@@ -684,7 +699,7 @@ zone_colors      <- c("Central" = "#3a7abf", "East" = "#4aab5e",
 
 # Descriptive Evidence
 
----
+------------------------------------------------------------------------
 
 ### Figure 1: Healthcare Utilization, Insurance, and Pension by Gender
 
@@ -744,16 +759,16 @@ HH_FI |>
 ::: {.callout-note collapse="true"}
 ## Interpretation — Figure 1
 
-- About **70% of older women** and **64% of older men** visited any healthcare facility in the past 12 months.
-- But only **6.5% of women** and **7.1% of men** were actually admitted to hospital — meaning most visits were outpatient, not serious enough for hospitalization.
-- Women visit healthcare more than men overall, but men get hospitalized slightly more — suggesting women seek routine care more while men have more serious illness episodes.
-- For financial protection: only **21.6% of women** have health insurance vs **23.8% of men** — women are less covered.
-- Pension is even more unequal — only **3.6% of women** receive pension vs **11.4% of men** — a very large gender gap.
-- **Financial support from family** is received by 15% of women and 11% of men — interestingly women receive more family financial support than men, which is the opposite of the insurance and pension pattern. This suggests that where formal protection (insurance, pension) is lower for women, informal family support partially compensates.
-- This figure sets the **baseline** — it tells us who uses healthcare and who has financial protection before we look at any relationships.
+-   About **70% of older women** and **64% of older men** visited any healthcare facility in the past 12 months.
+-   But only **6.5% of women** and **7.1% of men** were actually admitted to hospital — meaning most visits were outpatient, not serious enough for hospitalization.
+-   Women visit healthcare more than men overall, but men get hospitalized slightly more — suggesting women seek routine care more while men have more serious illness episodes.
+-   For financial protection: only **21.6% of women** have health insurance vs **23.8% of men** — women are less covered.
+-   Pension is even more unequal — only **3.6% of women** receive pension vs **11.4% of men** — a very large gender gap.
+-   **Financial support from family** is received by 15% of women and 11% of men — interestingly women receive more family financial support than men, which is the opposite of the insurance and pension pattern. This suggests that where formal protection (insurance, pension) is lower for women, informal family support partially compensates.
+-   This figure sets the **baseline** — it tells us who uses healthcare and who has financial protection before we look at any relationships.
 :::
 
----
+------------------------------------------------------------------------
 
 ### Figure 2: Healthcare Utilization and Financial Protection Across Regions
 
@@ -802,15 +817,15 @@ HH_FI |>
 ::: {.callout-note collapse="true"}
 ## Interpretation — Figure 2
 
-- This figure breaks the same measures down by **geographic zone**.
-- **North zone** has the highest healthcare visit rate — older adults in North India seek care more than other regions.
-- **South zone** has the highest insurance coverage — older adults in the South are much better protected financially.
-- **Pension receipt** is highest in North and lowest in East — showing large regional inequality in pension access.
-- The **gender gap seen in Figure 1 continues across all zones** — women consistently have lower insurance and pension coverage than men in every region.
-- This figure claim about **variation across major regions of India**.
+-   This figure breaks the same measures down by **geographic zone**.
+-   **North zone** has the highest healthcare visit rate — older adults in North India seek care more than other regions.
+-   **South zone** has the highest insurance coverage — older adults in the South are much better protected financially.
+-   **Pension receipt** is highest in North and lowest in East — showing large regional inequality in pension access.
+-   The **gender gap seen in Figure 1 continues across all zones** — women consistently have lower insurance and pension coverage than men in every region.
+-   This figure claim about **variation across major regions of India**.
 :::
 
----
+------------------------------------------------------------------------
 
 ### Figure 3: How Age Shapes the Insurance Effect on Healthcare Utilization
 
@@ -859,15 +874,15 @@ HH_FI |>
 ::: {.callout-note collapse="true"}
 ## Interpretation — Figure 3
 
--Figure 3 now asks: **does this effect grow with age?**
-- **Yes** — the gap between insured and uninsured hospitalization rates grows larger as age increases.
+-Figure 3 now asks: **does this effect grow with age?** - **Yes** — the gap between insured and uninsured hospitalization rates grows larger as age increases.
 - At age **45–54** the gap between insured and uninsured is small — younger older adults manage without insurance.
 - By age **75+** the gap is much larger — the oldest adults benefit most from insurance coverage.
 - This pattern holds for both men and women but is slightly stronger for **women** — older insured women at 75+ have much higher hospitalization rates than uninsured women of the same age.
 - This is the most **policy-relevant finding** — it shows that insurance matters most for the very old, who are also the most vulnerable and have the highest healthcare needs.
 - Already shown that pension and insurance coverage is already low, this means the people who need protection most — **oldest adults and women** — are the least likely to have it.
 :::
----
+
+------------------------------------------------------------------------
 
 ### Figure 4: Pension Receipt and Healthcare Outcomes by Residence and Age
 
@@ -915,15 +930,15 @@ HH_FI |>
 ::: {.callout-note collapse="true"}
 ## Interpretation — Figure 4
 
-- This figure asks — **does having pension income help older adults access hospital care as they age?**
-- The answer is clearly **yes** — in both urban and rural areas, pension recipients have higher hospitalization rates than those without pension at every age group.
-- In **urban areas** the pension gap is largest at age 45–54 — young urban pensioners (likely formal sector retirees) access hospital care much more than non-pensioned.
-- In **rural areas** the pension effect grows with age — by age 75+ rural pensioners are hospitalized almost **twice as often** as rural non-pensioners.
-- It shows pension strongly increases hospitalization, this means the majority of older adults, especially women, are **missing out on this benefit**.
-- This figure proves- **pension income shaping healthcare behavior** among older adults.
+-   This figure asks — **does having pension income help older adults access hospital care as they age?**
+-   The answer is clearly **yes** — in both urban and rural areas, pension recipients have higher hospitalization rates than those without pension at every age group.
+-   In **urban areas** the pension gap is largest at age 45–54 — young urban pensioners (likely formal sector retirees) access hospital care much more than non-pensioned.
+-   In **rural areas** the pension effect grows with age — by age 75+ rural pensioners are hospitalized almost **twice as often** as rural non-pensioners.
+-   It shows pension strongly increases hospitalization, this means the majority of older adults, especially women, are **missing out on this benefit**.
+-   This figure proves- **pension income shaping healthcare behavior** among older adults.
 :::
 
----
+------------------------------------------------------------------------
 
 ### Figure 5: Social Protection and Healthcare Access Across Caste Groups
 
@@ -967,15 +982,15 @@ HH_FI |>
 ::: {.callout-note collapse="true"}
 ## Interpretation — Figure 5
 
-- This figure adds a new dimension — **does insurance reduce inequality across caste groups?**
-- **Without insurance**: SC and ST groups have lower healthcare visit rates than OBC and General — a clear caste-based inequality in access.
-- **With insurance**: the gap narrows — SC and ST groups with insurance visit healthcare at rates much closer to the General category.
-- The **gender gap also narrows with insurance** — insured women visit almost as much as insured men across all caste groups.
-- This is a key finding — **insurance does not just increase overall utilization, it specifically helps disadvantaged groups** (SC, ST, women) close the access gap.
-- This connects-  controlling for **socioeconomic characteristics** — caste is one of the most important of these in the Indian context.
+-   This figure adds a new dimension — **does insurance reduce inequality across caste groups?**
+-   **Without insurance**: SC and ST groups have lower healthcare visit rates than OBC and General — a clear caste-based inequality in access.
+-   **With insurance**: the gap narrows — SC and ST groups with insurance visit healthcare at rates much closer to the General category.
+-   The **gender gap also narrows with insurance** — insured women visit almost as much as insured men across all caste groups.
+-   This is a key finding — **insurance does not just increase overall utilization, it specifically helps disadvantaged groups** (SC, ST, women) close the access gap.
+-   This connects- controlling for **socioeconomic characteristics** — caste is one of the most important of these in the Indian context.
 :::
 
----
+------------------------------------------------------------------------
 
 # Regression Analysis
 
@@ -1006,37 +1021,78 @@ HH_FI <- HH_FI |>
 stargazer_output_type <- if (knitr::is_latex_output()) "latex" else "html"
 ```
 
+## Healthcare Utilization and Insurance Coverage
 
-```{r regressions, include=T}
+```{r regressions1, include=T}
 #| echo: true
 #| code-fold: true
-hc1 <- lm(healthcare ~ health_insurance_covered + pension_status + financial_support +
-            factor(state_id), data = HH_FI)
 
-hc2 <- lm(healthcare ~ health_insurance_covered + pension_status + financial_support +
-            age + residence_type +
-            factor(religion) + factor(caste_social_group) +
-            factor(marital_status) + total_alive_children +
-            factor(state_id), data = HH_FI)
+hc_ins_1 <- lm(healthcare ~ health_insurance_covered + factor(state_id), data = HH_FI)
+
+hc_ins_2 <- lm(healthcare ~ health_insurance_covered +
+                 age + sex + residence_type +
+                 factor(religion) + factor(caste_social_group) +
+                 factor(marital_status) +
+                 factor(state_id), data = HH_FI)
+
+ip_ins_1 <- lm(inpatient_hospitalization ~ health_insurance_covered + factor(state_id), data = HH_FI)
+
+ip_ins_2 <- lm(inpatient_hospitalization ~ health_insurance_covered +
+                 age + sex + residence_type +
+                 factor(religion) + factor(caste_social_group) +
+                 factor(marital_status) +
+                 factor(state_id), data = HH_FI)
+
+```
+
+```{r, results='asis'} 
+#| echo: true 
+#| code-fold: true
 
 
-ip1 <- lm(inpatient_hospitalization ~ health_insurance_covered + pension_status + financial_support +
-            factor(state_id), data = HH_FI)
+stargazer(hc_ins_1, hc_ins_2, ip_ins_1, ip_ins_2,
+          type = "html",
+          keep = "health_insurance_covered",
+          omit.stat = c("f", "ser", "adj.rsq"),
+          add.lines = list(
+            c("Controls", "No", "Yes", "No", "Yes"),
+            c("State FE", "Yes", "Yes", "Yes", "Yes")
+          ),
+          table.attr = 'style="width:100%;"')
 
-ip2 <- lm(inpatient_hospitalization ~ health_insurance_covered + pension_status + financial_support +
-            age + residence_type +
-            factor(religion) + factor(caste_social_group) +
-            factor(marital_status) + total_alive_children +
-            factor(state_id), data = HH_FI)
 ```
 
 
-```{r, results='asis'}
+## Healthcare Utilization and Pension Receipt 
+
+```{r regressions2, include=T}
 #| echo: true
 #| code-fold: true
-stargazer(hc1, hc2, ip1, ip2,
+
+hc_pen_1 <- lm(healthcare ~ pension_status + factor(state_id), data = HH_FI)
+
+hc_pen_2 <- lm(healthcare ~ pension_status +
+                 age + sex + residence_type +
+                 factor(religion) + factor(caste_social_group) +
+                 factor(marital_status) +
+                 factor(state_id), data = HH_FI)
+
+ip_pen_1 <- lm(inpatient_hospitalization ~ pension_status + factor(state_id), data = HH_FI)
+
+ip_pen_2 <- lm(inpatient_hospitalization ~ pension_status +
+                 age + sex + residence_type +
+                 factor(religion) + factor(caste_social_group) +
+                 factor(marital_status) +
+                 factor(state_id), data = HH_FI)
+
+```
+
+```{r, results='asis'} 
+#| echo: true 
+#| code-fold: true
+stargazer(hc_pen_1, hc_pen_2, ip_pen_1, ip_pen_2,
           type = "html",
-          keep = c("health_insurance_covered", "pension_status", "financial_support"),
+          keep = "pension_status",
           omit.stat = c("f", "ser", "adj.rsq"),
           add.lines = list(
             c("Controls", "No", "Yes", "No", "Yes"),
@@ -1046,4 +1102,39 @@ stargazer(hc1, hc2, ip1, ip2,
 ```
 
 
+## Healthcare Utilization and Financial Support
 
+```{r regressions3, include=T}
+#| echo: true
+#| code-fold: true
+#| tbl-cap: "Effect of Financial Support on Healthcare Utilization"
+hc_fin_1 <- lm(healthcare ~ financial_support + factor(state_id), data = HH_FI)
+
+hc_fin_2 <- lm(healthcare ~ financial_support +
+                 age + sex + residence_type +
+                 factor(religion) + factor(caste_social_group) +
+                 factor(marital_status) +
+                 factor(state_id), data = HH_FI)
+
+ip_fin_1 <- lm(inpatient_hospitalization ~ financial_support + factor(state_id), data = HH_FI)
+
+ip_fin_2 <- lm(inpatient_hospitalization ~ financial_support +
+                 age + sex + residence_type +
+                 factor(religion) + factor(caste_social_group) +
+                 factor(marital_status) +
+                 factor(state_id), data = HH_FI)
+```
+
+```{r, results='asis'} 
+#| echo: true
+#| code-fold: true
+stargazer(hc_fin_1, hc_fin_2, ip_fin_1, ip_fin_2,
+          type = "html",
+          keep = "financial_support",
+          omit.stat = c("f", "ser", "adj.rsq"),
+          add.lines = list(
+            c("Controls", "No", "Yes", "No", "Yes"),
+            c("State FE", "Yes", "Yes", "Yes", "Yes")
+          ),
+          table.attr = 'style="width:100%;"')
+```

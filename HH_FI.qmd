@@ -699,13 +699,142 @@ zone_colors      <- c("Central" = "#3a7abf", "East" = "#4aab5e",
 # Descriptive Evidence
 
 ------------------------------------------------------------------------
+```{r caste, include=F}
+HH_FI <- HH_FI |>
+  mutate(class_caste = case_when(
+    caste_social_group ==4 ~ "Upper Caste",
+    caste_social_group %in% c(1, 2, 3) ~ "Lower Caste",
+    TRUE ~ NA_character_
+  ))
+```
 
-### Figure 1: Healthcare Utilization, Insurance, and Pension by Gender
+
+### Figure 1: Healthcare visit by mpce quintile, to see the economic gradient in healthcare access across economic status groups
 
 ```{r}
 #| echo: true
 #| code-fold: true
-#| label: fig1-descriptive-gender
+#| label: fig1-healthcare-mpce
+#| fig-cap: "Figure 1. Any Healthcare Visit by MPCE Quintile."
+#| fig-width: 10
+#| fig-height: 6
+
+HH_FI |>
+  filter(!is.na(mpce_quintile), !is.na(healthcare)) |>
+  mutate(
+    MPCE = factor(mpce_quintile,
+                  levels = c(1, 2, 3, 4, 5),
+                  labels = c("Poorest", "Poor", "Middle", "Rich", "Richest"))
+  ) |>
+  group_by(MPCE) |>
+  summarise(Visit = mean(healthcare, na.rm = TRUE) * 100, .groups = "drop") |>
+  ggplot(aes(x = MPCE, y = Visit, fill = MPCE)) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = paste0(round(Visit, 1), "%")),
+            vjust = -0.5, size = 4, fontface = "bold") +
+  scale_fill_brewer(palette = "Blues") +
+  scale_y_continuous(limits = c(0, 100),
+                     labels = function(x) paste0(x, "%"),
+                     expand = expansion(mult = c(0, 0.1))) +
+  labs(
+    title    = "Healthcare Visit by Economic Status",
+    x        = "MPCE Quintile", y = "% Visited Any Healthcare Facility",
+    caption  = "Source: LASI Wave 1, 2017–18."
+  ) +
+  theme(legend.position = "none")
+```
+
+::: {.callout-note collapse="true"}
+## Interpretation — Figure 1
+:::
+
+
+### Figure 2: Healthcare visit by caste class, to see the social stratification in healthcare access across caste groups
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| label: fig2-healthcare-caste
+#| fig-cap: "Figure 2. Any Healthcare Visit by Caste Class."
+#| fig-width: 8
+#| fig-height: 6
+
+HH_FI |>
+  filter(!is.na(class_caste), !is.na(healthcare)) |>
+  mutate(
+    Caste = factor(class_caste, levels = c("Lower Caste", "Upper Caste"))
+  ) |>
+  group_by(Caste) |>
+  summarise(Visit = mean(healthcare, na.rm = TRUE) * 100, .groups = "drop") |>
+  ggplot(aes(x = Caste, y = Visit, fill = Caste)) +
+  geom_col(width = 0.5) +
+  geom_text(aes(label = paste0(round(Visit, 1), "%")),
+            vjust = -0.5, size = 5, fontface = "bold") +
+  scale_fill_manual(values = c("Lower Caste" = "#E69F00", "Upper Caste" = "#56B4E9")) +
+  scale_y_continuous(limits = c(0, 100),
+                     labels = function(x) paste0(x, "%"),
+                     expand = expansion(mult = c(0, 0.1))) +
+  labs(
+    title    = "Healthcare Visit by Caste Class",
+    x        = "Caste Class", y = "% Visited Any Healthcare Facility",
+    caption  = "Source: LASI Wave 1, 2017–18."
+  ) +
+  theme(legend.position = "none")
+```
+
+::: {.callout-note collapse="true"}
+## Interpretation — Figure 2
+:::
+
+
+### Figure 3: Healthcare visit by mpce quintile and caste class, to see the intersection of economic status and caste on healthcare access
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| label: fig3-healthcare-mpce-caste
+#| fig-cap: "Figure 3. Any Healthcare Visit by MPCE Quintile and Caste Class."
+#| fig-width: 12
+#| fig-height: 6
+
+HH_FI |>
+  filter(!is.na(class_caste), !is.na(mpce_quintile), !is.na(healthcare)) |>
+  mutate(
+    Caste = factor(class_caste, levels = c("Lower Caste", "Upper Caste")),
+    MPCE = factor(mpce_quintile,
+                  levels = c(1, 2, 3, 4, 5),
+                  labels = c("Poorest", "Poor", "Middle", "Rich", "Richest"))
+  ) |>
+  group_by(MPCE, Caste) |>
+  summarise(Visit = mean(healthcare, na.rm = TRUE) * 100, .groups = "drop") |>
+  ggplot(aes(x = MPCE, y = Visit, fill = Caste)) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+  geom_text(aes(label = paste0(round(Visit, 1), "%")),
+            position = position_dodge(width = 0.7),
+            vjust = -0.5, size = 3.5, fontface = "bold") +
+  scale_fill_manual(values = c("Lower Caste" = "#E69F00", "Upper Caste" = "#56B4E9")) +
+  scale_y_continuous(limits = c(0, 100),
+                     labels = function(x) paste0(x, "%"),
+                     expand = expansion(mult = c(0, 0.1))) +
+  labs(
+    title    = "Healthcare Visit by Economic Status and Caste Class",
+    x        = "MPCE Quintile", y = "% Visited Any Healthcare Facility", fill = "Caste Class",
+    caption  = "Source: LASI Wave 1, 2017–18."
+  )
+```
+
+::: {.callout-note collapse="true"}
+## Interpretation — Figure 3
+:::
+
+---
+
+### Figure 4: Healthcare Utilization, Insurance, and Pension by Gender
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| label: fig4-descriptive-gender
 #| fig-cap: "Figure 1. Healthcare Utilization, Insurance Coverage, and Pension Receipt by Gender. Documenting the gender gap in both utilization and financial protection."
 #| fig-width: 13
 #| fig-height: 7
@@ -749,14 +878,13 @@ HH_FI |>
                      expand = expansion(mult = c(0, 0.08))) +
   labs(
     title    = "Healthcare Utilization and Financial Protection by Gender",
-    subtitle = "Adults aged 45+ | LASI Wave 1, 2017–18",
     x        = NULL, y = "Rate (%)", fill = "Gender",
     caption  = "Source: LASI Wave 1, 2017–18."
   )
 ```
 
 ::: {.callout-note collapse="true"}
-## Interpretation — Figure 1
+## Interpretation — Figure 4
 
 -   About **70% of older women** and **64% of older men** visited any healthcare facility in the past 12 months.
 -   But only **6.5% of women** and **7.1% of men** were actually admitted to hospital — meaning most visits were outpatient, not serious enough for hospitalization.
@@ -769,70 +897,13 @@ HH_FI |>
 
 ------------------------------------------------------------------------
 
-### Figure 2: Healthcare Utilization and Financial Protection Across Regions
+### Figure 5: How Age Shapes the Insurance Effect on Healthcare Utilization
 
 ```{r}
 #| echo: true
 #| code-fold: true
-#| label: fig2-descriptive-zone
-#| fig-cap: "Figure 2. Healthcare Utilization, Insurance Coverage, and Pension Receipt across Geographic Zones.Documenting regional variation in both utilization and financial protection."
-#| fig-width: 14
-#| fig-height: 9
-
-HH_FI |>
-  filter(!is.na(zone), !is.na(sex)) |>
-  mutate(Gender = factor(sex, 0:1, c("Female", "Male"))) |>
-  group_by(zone, Gender) |>
-  summarise(
-    `Any Healthcare Visit (%)`      = mean(healthcare,               na.rm=TRUE)*100,
-    `Inpatient Hospitalization (%)`  = mean(inpatient_hospitalization, na.rm=TRUE)*100,
-    `Health Insurance Coverage (%)`  = mean(health_insurance_covered,  na.rm=TRUE)*100,
-    `Pension Receipt (%)`            = mean(pension_status,            na.rm=TRUE)*100,
-    .groups = "drop"
-  ) |>
-  pivot_longer(cols = -c(zone, Gender), names_to = "Measure", values_to = "Value") |>
-  mutate(Measure = factor(Measure, levels = c(
-    "Any Healthcare Visit (%)", "Inpatient Hospitalization (%)",
-    "Health Insurance Coverage (%)", "Pension Receipt (%)"
-  ))) |>
-  ggplot(aes(x = zone, y = Value, fill = Gender)) +
-  geom_col(position = position_dodge(width = 0.65), width = 0.55,
-           color = "white", linewidth = 0.4) +
-  geom_text(aes(label = paste0(round(Value,1), "%")),
-            position = position_dodge(width = 0.65),
-            vjust = -0.5, size = 3.2, fontface = "bold") +
-  facet_wrap(~ Measure, ncol = 2, scales = "free_y") +
-  scale_fill_manual(values = gender_colors) +
-  scale_y_continuous(labels = function(x) paste0(x, "%"),
-                     expand = expansion(mult = c(0, 0.12))) +
-  labs(
-    title    = "Healthcare Utilization and Financial Protection Across Regions",
-    subtitle = "Adults aged 45+ | LASI Wave 1, 2017–18",
-    x        = "Geographic Zone", y = "Rate (%)", fill = "Gender",
-    caption  = "Source: LASI Wave 1, 2017–18."
-  )
-```
-
-::: {.callout-note collapse="true"}
-## Interpretation — Figure 2
-
--   This figure breaks the same measures down by **geographic zone**.
--   **North zone** has the highest healthcare visit rate — older adults in North India seek care more than other regions.
--   **South zone** has the highest insurance coverage — older adults in the South are much better protected financially.
--   **Pension receipt** is highest in North and lowest in East — showing large regional inequality in pension access.
--   The **gender gap seen in Figure 1 continues across all zones** — women consistently have lower insurance and pension coverage than men in every region.
--   This figure claim about **variation across major regions of India**.
-:::
-
-------------------------------------------------------------------------
-
-### Figure 3: How Age Shapes the Insurance Effect on Healthcare Utilization
-
-```{r}
-#| echo: true
-#| code-fold: true
-#| label: fig3-age-insurance
-#| fig-cap: "Figure 3. Inpatient Hospitalization by Age Group, Insurance Status, and Gender. It shows whether the insurance effect on hospitalization grows with age and differs by gender."
+#| label: fig5-age-insurance
+#| fig-cap: "Figure 5. Inpatient Hospitalization by Age Group, Insurance Status, and Gender. It shows whether the insurance effect on hospitalization grows with age and differs by gender."
 #| fig-width: 13
 #| fig-height: 7
 
@@ -871,7 +942,7 @@ HH_FI |>
 ```
 
 ::: {.callout-note collapse="true"}
-## Interpretation — Figure 3
+## Interpretation — Figure 5
 
 -Figure 3 now asks: **does this effect grow with age?** - **Yes** — the gap between insured and uninsured hospitalization rates grows larger as age increases.
 - At age **45–54** the gap between insured and uninsured is small — younger older adults manage without insurance.
@@ -883,13 +954,13 @@ HH_FI |>
 
 ------------------------------------------------------------------------
 
-### Figure 4: Pension Receipt and Healthcare Outcomes by Residence and Age
+### Figure 6: Pension Receipt and Healthcare Outcomes by Residence and Age
 
 ```{r}
 #| echo: true
 #| code-fold: true
-#| label: fig4-pension-outcomes
-#| fig-cap: "Figure 4. Association Between Pension Receipt and Inpatient Hospitalization by Age Group and Residence. Line plots show how pension effect on hospitalization varies across age groups in urban vs rural areas."
+#| label: fig6-pension-outcomes
+#| fig-cap: "Figure 6. Association Between Pension Receipt and Inpatient Hospitalization by Age Group and Residence. Line plots show how pension effect on hospitalization varies across age groups in urban vs rural areas."
 #| fig-width: 13
 #| fig-height: 7
 
@@ -927,7 +998,7 @@ HH_FI |>
 ```
 
 ::: {.callout-note collapse="true"}
-## Interpretation — Figure 4
+## Interpretation — Figure 6
 
 -   This figure asks — **does having pension income help older adults access hospital care as they age?**
 -   The answer is clearly **yes** — in both urban and rural areas, pension recipients have higher hospitalization rates than those without pension at every age group.
@@ -935,58 +1006,6 @@ HH_FI |>
 -   In **rural areas** the pension effect grows with age — by age 75+ rural pensioners are hospitalized almost **twice as often** as rural non-pensioners.
 -   It shows pension strongly increases hospitalization, this means the majority of older adults, especially women, are **missing out on this benefit**.
 -   This figure proves- **pension income shaping healthcare behavior** among older adults.
-:::
-
-------------------------------------------------------------------------
-
-### Figure 5: Social Protection and Healthcare Access Across Caste Groups
-
-```{r}
-#| echo: true
-#| code-fold: true
-#| label: fig5-caste-insurance
-#| fig-cap: "Figure 5. Any Healthcare Visit by Caste Group, Insurance Status, and Gender. Documents whether insurance reduces inequality in healthcare access across caste groups and genders."
-#| fig-width: 13
-#| fig-height: 7
-
-HH_FI |>
-  filter(!is.na(caste_social_group), !is.na(sex),
-         !is.na(health_insurance_covered), !is.na(healthcare)) |>
-  mutate(
-    Caste     = factor(caste_social_group, 1:4, c("SC","ST","OBC","General")),
-    Gender    = factor(sex, 0:1, c("Female","Male")),
-    Insurance = factor(health_insurance_covered, 0:1, c("No Insurance","Insured"))
-  ) |>
-  group_by(Caste, Gender, Insurance) |>
-  summarise(Visit = mean(healthcare, na.rm=TRUE)*100, .groups="drop") |>
-  ggplot(aes(x = Caste, y = Visit, fill = Gender)) +
-  geom_col(position = position_dodge(width = 0.65), width = 0.55,
-           color = "white", linewidth = 0.4) +
-  geom_text(aes(label = paste0(round(Visit,1), "%")),
-            position = position_dodge(width = 0.65),
-            vjust = -0.5, size = 3.5, fontface = "bold") +
-  facet_wrap(~ Insurance, nrow = 1) +
-  scale_fill_manual(values = gender_colors) +
-  scale_y_continuous(limits = c(0, 105),
-                     labels = function(x) paste0(x, "%"),
-                     expand = expansion(mult = c(0, 0.05))) +
-  labs(
-    title    = "Social Protection and Healthcare Access Across Caste Groups",
-    subtitle = "Caste × Gender × Insurance | Adults aged 45+ | LASI Wave 1, 2017–18",
-    x        = "Caste Group", y = "% Visited Any Healthcare Facility", fill = "Gender",
-    caption  = "Source: LASI Wave 1, 2017–18."
-  )
-```
-
-::: {.callout-note collapse="true"}
-## Interpretation — Figure 5
-
--   This figure adds a new dimension — **does insurance reduce inequality across caste groups?**
--   **Without insurance**: SC and ST groups have lower healthcare visit rates than OBC and General — a clear caste-based inequality in access.
--   **With insurance**: the gap narrows — SC and ST groups with insurance visit healthcare at rates much closer to the General category.
--   The **gender gap also narrows with insurance** — insured women visit almost as much as insured men across all caste groups.
--   This is a key finding — **insurance does not just increase overall utilization, it specifically helps disadvantaged groups** (SC, ST, women) close the access gap.
--   This connects- controlling for **socioeconomic characteristics** — caste is one of the most important of these in the Indian context.
 :::
 
 ------------------------------------------------------------------------
@@ -1123,7 +1142,6 @@ ip_fin_2 <- lm(inpatient_hospitalization ~ financial_support +
                  factor(marital_status) +
                  factor(state_id), data = HH_FI)
 ```
-
 ```{r, results='asis'} 
 #| echo: true
 #| code-fold: true
@@ -1137,3 +1155,4 @@ stargazer(hc_fin_1, hc_fin_2, ip_fin_1, ip_fin_2,
           ),
           table.attr = 'style="width:100%;"')
 ```
+

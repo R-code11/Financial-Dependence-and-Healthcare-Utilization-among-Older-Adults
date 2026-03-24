@@ -416,15 +416,14 @@ The analysis uses the individual-level dataset, restricting the sample to respon
 Four outcome variables are used.
 **Healthcare** is a binary indicator equal to 1 if the individual visited any healthcare facility in the past 12 months.
 **Inpatient hospitalization** is a binary indicator equal to 1 if the individual was admitted to a hospital.
-**Total facilities visited** is a count of distinct healthcare facilities visited.
-**Hospitalisation count** is the number of times the individual was hospitalized in the past 12 months.
+
 
 ### Independent Variables
 
 Three key predictors capture financial protection.
-**Financial support** is a binary indicator equal to 1 if the individual receives financial support from family or others.
 **Health insurance coverage** is a binary indicator equal to 1 if the individual is covered by any health insurance scheme.
 **Pension status** is a binary indicator equal to 1 if the individual receives any pension income.
+**Financial support** is a binary indicator equal to 1 if the individual receives financial support from family or others.
 
 ### Control Variables
 

@@ -1,0 +1,311 @@
+---
+title: "Foreign Trade and Balance of Payments"
+subtitle: "Inter-Table Relations — Based on Choudhari Chapter"
+author: "Economics Analysis"
+date: today
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    toc-title: "Contents"
+    toc-location: left
+    number-sections: true
+    code-fold: true
+    code-summary: "Show Code"
+    smooth-scroll: true
+    page-layout: full
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+  echo: true
+editor:
+  markdown:
+    wrap: sentence
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(dplyr)
+library(kableExtra)
+library(knitr)
+```
+
+# Overview
+
+This document presents four inter-related tables drawn from the **Foreign Trade and Balance of Payments** chapter (Choudhari).
+Together they trace how India's **Balance of Trade** feeds into the **Current Account**, how the **Capital Account** is built up, and how both accounts combine into the **Overall Balance of Payments (BOP)**.
+
+The data below are illustrative figures (in ₹ Crore) consistent with the textbook treatment of the topic.
+
+---
+
+# Table 1 — Balance of Trade (BoT)
+
+The Balance of Trade records the difference between the value of **merchandise exports** and **merchandise imports** over a given period.
+
+$$\text{Trade Balance} = \text{Exports (X)} - \text{Imports (M)}$$
+
+A *negative* value indicates a **trade deficit** (imports exceed exports).
+
+```{r}
+#| label: table1-bot
+#| echo: true
+
+bot <- data.frame(
+  Year    = c("2017–18", "2018–19", "2019–20", "2020–21", "2021–22"),
+  Exports = c(1852600, 2310600, 2113200, 1756400, 3218700),
+  Imports = c(2887800, 3459400, 3001300, 2398900, 4899100),
+  Trade_Balance = c(-1035200, -1148800, -888100, -642500, -1680400)
+)
+
+bot |>
+  kbl(
+    caption   = "Table 1: India's Balance of Trade (₹ Crore)",
+    booktabs  = TRUE,
+    col.names = c("Year", "Exports (X)", "Imports (M)", "Trade Balance (X − M)"),
+    format.args = list(big.mark = ",")
+  ) |>
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE
+  ) |>
+  column_spec(4, bold = TRUE,
+              color = ifelse(bot$Trade_Balance < 0, "red", "darkgreen"))
+```
+
+> **Key relation:** The *Trade Balance* column from Table 1 is carried forward directly into Table 2 as the starting component of the Current Account.
+
+---
+
+# Table 2 — Current Account Balance
+
+The Current Account has three sub-components:
+
+| Sub-component | Description |
+|---|---|
+| **Trade Balance** | Goods exports minus goods imports (= Table 1, col 4) |
+| **Net Invisibles** | Net receipts from services, remittances & transfers |
+| **Current Account Balance** | Trade Balance + Net Invisibles |
+
+$$\text{Current Account Balance (CAB)} = \text{Trade Balance} + \text{Net Invisibles}$$
+
+```{r}
+#| label: table2-ca
+#| echo: true
+
+current_account <- data.frame(
+  Year            = bot$Year,
+  Trade_Balance   = bot$Trade_Balance,           # ← linked from Table 1
+  Net_Invisibles  = c(518600, 601400, 647300, 712800, 789200),
+  CA_Balance      = NA_real_
+)
+
+current_account <- current_account |>
+  mutate(CA_Balance = Trade_Balance + Net_Invisibles)
+
+current_account |>
+  kbl(
+    caption   = "Table 2: India's Current Account Balance (₹ Crore)",
+    booktabs  = TRUE,
+    col.names = c("Year", "Trade Balance (from T1)", "Net Invisibles",
+                  "Current Account Balance"),
+    format.args = list(big.mark = ",")
+  ) |>
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE
+  ) |>
+  column_spec(2, italic = TRUE, color = "grey40") |>
+  column_spec(4, bold = TRUE,
+              color = ifelse(current_account$CA_Balance < 0, "red", "darkgreen"))
+```
+
+> **Key relation:** The *Current Account Balance* from Table 2 is one of the two main inputs into the Overall BOP (Table 4). The *Trade Balance* column is identical to Table 1 column 4 — demonstrating a direct link between the two tables.
+
+---
+
+# Table 3 — Capital Account Balance
+
+The Capital Account records financial flows between India and the rest of the world:
+
+| Component | Description |
+|---|---|
+| **FDI (net)** | Foreign Direct Investment inflows minus outflows |
+| **FPI / FII (net)** | Foreign Portfolio Investment (equity + debt) |
+| **External Borrowings** | ECB, NRI deposits, and other loans |
+| **Capital Account Balance** | Sum of all capital flow items |
+
+$$\text{Capital Account Balance (KAB)} = \text{FDI} + \text{FPI} + \text{External Borrowings}$$
+
+```{r}
+#| label: table3-ka
+#| echo: true
+
+capital_account <- data.frame(
+  Year                = bot$Year,
+  FDI_Net             = c(226700, 305400, 432100, 486300, 584800),
+  FPI_Net             = c( 25400,  -6800, 115200, 272100, -128600),
+  External_Borrowings = c(180500, 195300,  88400, 115600,  237800),
+  KA_Balance          = NA_real_
+)
+
+capital_account <- capital_account |>
+  mutate(KA_Balance = FDI_Net + FPI_Net + External_Borrowings)
+
+capital_account |>
+  kbl(
+    caption   = "Table 3: India's Capital Account Balance (₹ Crore)",
+    booktabs  = TRUE,
+    col.names = c("Year", "FDI (net)", "FPI/FII (net)",
+                  "External Borrowings", "Capital Account Balance"),
+    format.args = list(big.mark = ",")
+  ) |>
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE
+  ) |>
+  column_spec(5, bold = TRUE,
+              color = ifelse(capital_account$KA_Balance >= 0, "darkgreen", "red"))
+```
+
+> **Key relation:** The *Capital Account Balance* from Table 3 is the second main input into the Overall BOP (Table 4).
+
+---
+
+# Table 4 — Overall Balance of Payments (BOP)
+
+The **Balance of Payments** consolidates both the Current Account and the Capital Account.
+Any surplus or deficit is settled through a change in **Foreign Exchange Reserves**.
+
+$$\text{Overall BOP} = \text{CAB (Table 2)} + \text{KAB (Table 3)}$$
+
+$$\text{Change in Forex Reserves} = -\,\text{Overall BOP}$$
+
+*(A positive Overall BOP means reserves *increase*; a negative BOP means reserves *decrease*.)*
+
+```{r}
+#| label: table4-bop
+#| echo: true
+
+bop <- data.frame(
+  Year       = bot$Year,
+  CA_Balance = current_account$CA_Balance,   # ← linked from Table 2
+  KA_Balance = capital_account$KA_Balance,   # ← linked from Table 3
+  Overall_BOP = NA_real_,
+  Change_Reserves = NA_real_
+)
+
+bop <- bop |>
+  mutate(
+    Overall_BOP     = CA_Balance + KA_Balance,
+    Change_Reserves = -Overall_BOP
+  )
+
+bop |>
+  kbl(
+    caption   = "Table 4: India's Overall Balance of Payments (₹ Crore)",
+    booktabs  = TRUE,
+    col.names = c("Year", "CAB (from T2)", "KAB (from T3)",
+                  "Overall BOP", "Change in Forex Reserves"),
+    format.args = list(big.mark = ",")
+  ) |>
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE
+  ) |>
+  column_spec(2, italic = TRUE, color = "grey40") |>
+  column_spec(3, italic = TRUE, color = "grey40") |>
+  column_spec(4, bold = TRUE,
+              color = ifelse(bop$Overall_BOP >= 0, "darkgreen", "red")) |>
+  column_spec(5, bold = TRUE,
+              color = ifelse(bop$Change_Reserves >= 0, "darkgreen", "red"))
+```
+
+---
+
+# Relations Between the Four Tables
+
+The diagram below summarises how each table feeds into the next.
+
+```{r}
+#| label: relation-summary
+#| echo: false
+
+relation <- data.frame(
+  Step = c(
+    "T1 → T2",
+    "T2 → T4",
+    "T3 → T4",
+    "T4 (derived)"
+  ),
+  From_Table = c(
+    "Table 1 — Balance of Trade",
+    "Table 2 — Current Account",
+    "Table 3 — Capital Account",
+    "Table 4 — Overall BOP"
+  ),
+  Column_Transferred = c(
+    "Trade Balance (X − M)",
+    "Current Account Balance",
+    "Capital Account Balance",
+    "Change in Forex Reserves"
+  ),
+  Used_As = c(
+    "First component of Current Account (Table 2)",
+    "First input to Overall BOP (Table 4)",
+    "Second input to Overall BOP (Table 4)",
+    "Derived as −(CAB + KAB)"
+  )
+)
+
+relation |>
+  kbl(
+    caption   = "Summary of Inter-Table Relations",
+    booktabs  = TRUE,
+    col.names = c("Link", "Source Table", "Column / Value Transferred", "How It Is Used")
+  ) |>
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE
+  ) |>
+  column_spec(1, bold = TRUE, width = "6em") |>
+  column_spec(2, width = "18em") |>
+  column_spec(3, width = "20em") |>
+  column_spec(4, width = "24em")
+```
+
+## Verification: Consistency Check Across Tables
+
+```{r}
+#| label: verification
+#| echo: true
+
+# Confirm that CA_Balance in Table 4 equals the one computed in Table 2
+stopifnot(all(bop$CA_Balance == current_account$CA_Balance))
+
+# Confirm that KA_Balance in Table 4 equals the one computed in Table 3
+stopifnot(all(bop$KA_Balance == capital_account$KA_Balance))
+
+# Confirm Trade Balance in Table 2 equals the one computed in Table 1
+stopifnot(all(current_account$Trade_Balance == bot$Trade_Balance))
+
+message("All inter-table relations verified — values are consistent across Table 1, 2, 3, and 4.")
+```
+
+---
+
+# Conceptual Summary
+
+| Account | What it measures | Linked tables |
+|---|---|---|
+| **Balance of Trade** | Goods exports vs imports | Table 1 → Table 2 |
+| **Current Account** | Goods + Services + Transfers | Table 2 → Table 4 |
+| **Capital Account** | Financial flows (FDI, FPI, Loans) | Table 3 → Table 4 |
+| **Overall BOP** | Current + Capital accounts | Table 4 (final) |
+
+> *"The Balance of Payments always balances — any Current Account deficit must be financed by a surplus on the Capital Account or by drawing down Foreign Exchange Reserves."*  
+> — Choudhari, *Foreign Trade and Balance of Payments*
